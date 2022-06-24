@@ -1,9 +1,12 @@
-
 __device__ float euclideanDistance(int x1, int x2, int y1, int y2){
     return sqrtf(float((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2)));
 }
 
-__device__ void check_neighbor(int *VD, int *S, int N, int local_value,int local_x, int local_y, int pixel_x, int pixel_y){
+__device__ float manhattanDistance(int x1, int x2, int y1, int y2){
+    return  fabsf(float(x1 - x2)) + fabsf(float(y1 - y2));
+}
+
+__device__ void check_neighbor(int *VD, int *S, int N, int local_value,int local_x, int local_y, int pixel_x, int pixel_y, int DIST){
     
     //Values of the target pixel
     int pixel = pixel_y*N + pixel_x;
@@ -23,8 +26,16 @@ __device__ void check_neighbor(int *VD, int *S, int N, int local_value,int local
         rival_x = rival_seed%N;
         rival_y = rival_seed/N;
 
-        dist_local = euclideanDistance(local_x, pixel_x, local_y, pixel_y);
-        dist_rival = euclideanDistance(rival_x, pixel_x, rival_y, pixel_y);
+	//dist_local = euclideanDistance(local_x, pixel_x, local_y, pixel_y);
+        //dist_rival = euclideanDistance(rival_x, pixel_x, rival_y, pixel_y);
+	if(DIST == 0){
+            dist_local = euclideanDistance(local_x, pixel_x, local_y, pixel_y);
+            dist_rival = euclideanDistance(rival_x, pixel_x, rival_y, pixel_y);
+        }
+        else{
+            dist_local = manhattanDistance(local_x, pixel_x, local_y, pixel_y);
+            dist_rival = manhattanDistance(rival_x, pixel_x, rival_y, pixel_y);
+        }
 
         if(dist_local <= dist_rival) VD[pixel] = local_value;
     }
@@ -50,7 +61,118 @@ __global__ void init_GPUSeeds(int *VD, int *SEEDS, int S){
 }
 
 //For classic approach of JFA
-__global__ void voronoiJFA_8Ng(int *VD, int *S, int k, int N, int s){
+__global__ void voronoiJFA_8Ng(int *VD, int *S, int k, int N, int s, int DIST){
+    int tidx = blockDim.x * blockIdx.x + threadIdx.x;
+    int tidy = blockDim.y * blockIdx.y + threadIdx.y;
+    int tid = tidy*N + tidx;
+    int local_k = k;
+    //GRID[i] -> INDICE EN SEEDS
+    //Values of the local seed
+    int local_value;
+    int local_seed;
+    int local_x;
+    int local_y;
+
+    //Values of the target pixel
+    int pixel;
+    int pixel_x;
+    int pixel_y;
+    if(tid < s){
+        VD[S[tid]] = tid;
+    }
+    //local_value = VD[tid];
+    if(tidx < N && tidy < N ){
+    /*
+    1 .. 2 .. 3 -> first set of neighbors
+    .
+    .
+    4 .. P .. 5 -> second set of neighbors
+    .
+    .
+    6 .. 7 .. 8 -> third set of neighbors
+    */
+    //while(local_k>=1){
+        //printf("%i\n", VD[tid]);
+        local_value = VD[tid]; //-> Extraigo indice
+        if(local_value!= -1){
+            local_seed = S[local_value]; //valor de real de semilla
+            local_x = local_seed%N;
+            local_y = local_seed/N;
+            /**/
+            //First set
+            if((tidx - local_k) >= 0){
+                pixel_x = tidx - local_k;
+                //First neighbor
+                if(tidy - local_k >= 0){
+                    pixel_y = tidy - local_k;
+                    pixel = pixel_y * N + pixel_x;
+                    if(VD[pixel] == -1) VD[pixel] = local_value;
+                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+                }    
+                //Second neighbor
+                pixel_y = tidy;
+                pixel = pixel_y * N + pixel_x;
+                if(VD[pixel] == -1) VD[pixel] = local_value;
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+                //Third neighbor
+                if(tidy + local_k < N){
+                    pixel_y = tidy + local_k;
+                    pixel = pixel_y * N + pixel_x;
+                    if(VD[pixel] == -1) VD[pixel] = local_value;
+                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+                }
+            }
+            /**/
+            //Second set
+            //Forth neighbor
+            pixel_x = tidx;
+            if(tidy - local_k >= 0){
+                pixel_y = tidy - local_k;
+                pixel = pixel_y * N + pixel_x;
+                if(VD[pixel] == -1) VD[pixel] = local_value;
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+            }
+            //Fifth neighbor
+            if(tidy + local_k < N){
+                pixel_y = tidy + local_k;
+                pixel = pixel_y * N + pixel_x;
+                if(VD[pixel] == -1) VD[pixel] = local_value;
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+            }
+            /**/
+            //Third set
+            if(tidx + local_k < N){
+                pixel_x = tidx + local_k;
+                //Sixth neighbor
+                if(tidy - local_k >= 0){
+                    pixel_y = tidy - local_k;
+                    pixel = pixel_y * N + pixel_x;
+                    if(VD[pixel] == -1) VD[pixel] = local_value;
+                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+                }    
+                //Seventh neighbor
+                pixel_y = tidy;
+                pixel = pixel_y * N + pixel_x;
+                if(VD[pixel] == -1) VD[pixel] = local_value;
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+                //Eighth neighbor
+                if(tidy + local_k < N){
+                    pixel_y = tidy + local_k;
+                    pixel = pixel_y * N + pixel_x;
+                    if(VD[pixel] == -1) VD[pixel] = local_value;
+                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+                }
+            }
+            /**/
+            
+        //__syncthreads();
+        //local_k=local_k/2;
+        //__syncthreads();
+        }
+    }
+}
+
+__global__ void voronoiJFA_8NgV21(int *VD, int *S, int k, int N, int s, int DIST){
     int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     int tidy = blockDim.y * blockIdx.y + threadIdx.y;
     int tid = tidy*N + tidx;
@@ -75,86 +197,168 @@ __global__ void voronoiJFA_8Ng(int *VD, int *S, int k, int N, int s){
     4   P   5 -> second set of neighbors
     6   7   8 -> third set of neighbors
     */
-    //while(local_k>=1){
-        //printf("%i\n", VD[tid]);
-        local_value = VD[tid]; //-> Extraigo indice
-        if(local_value!= -1){
-            local_seed = S[local_value]; //valor de real de semilla
-            local_x = local_seed%N;
-            local_y = local_seed/N;
-            //First set
-            if(tidy - local_k >= 0){
-                pixel_y = tidy - local_k;
-                //First neighbor
-                if(tidx - local_k >= 0){
-                    pixel_x = tidx - local_k;
-                    pixel = pixel_y * N + pixel_x;
-                    if(VD[pixel] == -1) VD[pixel] = local_value;
-                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-                }    
-                //Second neighbor
-                pixel_x = tidx;
-                pixel = pixel_y * N + pixel_x;
-                if(VD[pixel] == -1) VD[pixel] = local_value;
-                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-                //Third neighbor
-                if(tidx + local_k < N){
-                    pixel_x = tidx + local_k;
-                    pixel = pixel_y * N + pixel_x;
-                    if(VD[pixel] == -1) VD[pixel] = local_value;
-                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-                }
-            }
-
-            //Second set
-            //Forth neighbor
-            pixel_y = tidy;
+    local_value = VD[tid]; //-> Extraigo indice
+    if(local_value!= -1){
+        local_seed = S[local_value]; //valor de real de semilla
+        local_x = local_seed%N;
+        local_y = local_seed/N;
+        /**/
+        //First set
+        if((tidy - local_k) >= 0){
+            pixel_y = tidy - local_k;
+            //First neighbor
             if(tidx - local_k >= 0){
                 pixel_x = tidx - local_k;
                 pixel = pixel_y * N + pixel_x;
                 if(VD[pixel] == -1) VD[pixel] = local_value;
-                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-            }
-            //Fifth neighbor
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+            }    
+            //Second neighbor
+            pixel_x = tidx;
+            pixel = pixel_y * N + pixel_x;
+            if(VD[pixel] == -1) VD[pixel] = local_value;
+            else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+            //Third neighbor
             if(tidx + local_k < N){
                 pixel_x = tidx + local_k;
                 pixel = pixel_y * N + pixel_x;
                 if(VD[pixel] == -1) VD[pixel] = local_value;
-                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
             }
+        }
+        /**/
+        /**/
+        /**/
+    //__syncthreads();
+    //local_k=local_k/2;
+    //__syncthreads();
+    }
+    }
+}
 
-            //Third set
-            if(tidy + local_k < N){
-                pixel_y = tidy + local_k;
-                //Sixth neighbor
-                if(tidx - local_k >= 0){
-                    pixel_x = tidx - local_k;
-                    pixel = pixel_y * N + pixel_x;
-                    if(VD[pixel] == -1) VD[pixel] = local_value;
-                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-                }    
-                //Seventh neighbor
-                pixel_x = tidx;
+__global__ void voronoiJFA_8NgV22(int *VD, int *S, int k, int N, int s, int DIST){
+    int tidx = blockDim.x * blockIdx.x + threadIdx.x;
+    int tidy = blockDim.y * blockIdx.y + threadIdx.y;
+    int tid = tidy*N + tidx;
+    int local_k = k;
+    //GRID[i] -> INDICE EN SEEDS
+    //Values of the local seed
+    int local_value;
+    int local_seed;
+    int local_x;
+    int local_y;
+
+    //Values of the target pixel
+    int pixel;
+    int pixel_x;
+    int pixel_y;
+    /*if(tid < s){
+        VD[S[tid]] = tid;
+    }*/
+    if(tidx < N && tidy < N){
+    /*
+    1   2   3 -> first set of neighbors
+    4   P   5 -> second set of neighbors
+    6   7   8 -> third set of neighbors
+    */
+    local_value = VD[tid]; //-> Extraigo indice
+    if(local_value!= -1){
+        local_seed = S[local_value]; //valor de real de semilla
+        local_x = local_seed%N;
+        local_y = local_seed/N;
+        /**/
+        //Second set
+        //Forth neighbor
+        pixel_y = tidy;
+        if(tidx - local_k >= 0){
+            pixel_x = tidx - local_k;
+            pixel = pixel_y * N + pixel_x;
+            if(VD[pixel] == -1) VD[pixel] = local_value;
+            else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+        }
+        //Fifth neighbor
+        if(tidx + local_k < N){
+            pixel_x = tidx + local_k;
+            pixel = pixel_y * N + pixel_x;
+            if(VD[pixel] == -1) VD[pixel] = local_value;
+            else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+        }
+        /**/
+        /**/
+        /**/
+    //__syncthreads();
+    //local_k=local_k/2;
+    //__syncthreads();
+    }
+    }
+}
+
+__global__ void voronoiJFA_8NgV23(int *VD, int *S, int k, int N, int s, int DIST){
+    int tidx = blockDim.x * blockIdx.x + threadIdx.x;
+    int tidy = blockDim.y * blockIdx.y + threadIdx.y;
+    int tid = tidy*N + tidx;
+    int local_k = k;
+    //GRID[i] -> INDICE EN SEEDS
+    //Values of the local seed
+    int local_value;
+    int local_seed;
+    int local_x;
+    int local_y;
+
+    //Values of the target pixel
+    int pixel;
+    int pixel_x;
+    int pixel_y;
+    /*if(tid < s){
+        VD[S[tid]] = tid;
+    }*/
+    if(tidx < N && tidy < N){
+    /*
+    1   2   3 -> first set of neighbors
+    4   P   5 -> second set of neighbors
+    6   7   8 -> third set of neighbors
+    */
+    local_value = VD[tid]; //-> Extraigo indice
+    if(local_value!= -1){
+        local_seed = S[local_value]; //valor de real de semilla
+        local_x = local_seed%N;
+        local_y = local_seed/N;
+        /**/
+        //Third set
+        if(tidy + local_k < N){
+            pixel_y = tidy + local_k;
+            //Sixth neighbor
+            if(tidx - local_k >= 0){
+                pixel_x = tidx - local_k;
                 pixel = pixel_y * N + pixel_x;
                 if(VD[pixel] == -1) VD[pixel] = local_value;
-                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-                //Eighth neighbor
-                if(tidx + local_k < N){
-                    pixel_x = tidx + local_k;
-                    pixel = pixel_y * N + pixel_x;
-                    if(VD[pixel] == -1) VD[pixel] = local_value;
-                    else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y);
-                }
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+            }    
+            //Seventh neighbor
+            pixel_x = tidx;
+            pixel = pixel_y * N + pixel_x;
+            if(VD[pixel] == -1) VD[pixel] = local_value;
+            else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
+            //Eighth neighbor
+            if(tidx + local_k < N){
+                pixel_x = tidx + local_k;
+                pixel = pixel_y * N + pixel_x;
+                if(VD[pixel] == -1) VD[pixel] = local_value;
+                else check_neighbor(VD, S, N, local_value, local_x, local_y, pixel_x, pixel_y, DIST);
             }
-        //__syncthreads();
-        //local_k=local_k/2;
-        //__syncthreads();
         }
+        /**/
+        /**/
+        /**/
+    //__syncthreads();
+    //local_k=local_k/2;
+    //__syncthreads();
+    }
     }
 }
 
 //For dynamic approach of JFA*
-__global__ void voronoiJFA_4Ng(int *VD, int *S, int *MAX,int k, int N, int s){
+__global__ void voronoiJFA_4Ng(int *VD, int *S, int *MAX,int k, int N, int s, int DIST){
     int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     int tidy = blockDim.y * blockIdx.y + threadIdx.y;
     int tid = tidy*N + tidx;
@@ -186,19 +390,19 @@ __global__ void voronoiJFA_4Ng(int *VD, int *S, int *MAX,int k, int N, int s){
             local_y = local_seed/N;
             //First neighbor
             if(tidy - kmod >= 0){
-                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx, tidy-kmod);
+                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx, tidy-kmod, DIST);
             }
             //Second neighbor
             if(tidx - kmod >= 0){
-                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx - kmod, tidy);
+                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx - kmod, tidy, DIST);
             }
             //Third neighbor
             if(tidx + kmod < N){
-                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx + kmod, tidy);
+                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx + kmod, tidy, DIST);
             }
             //Forth neighbor
             if(tidy + kmod < N){
-                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx, tidy + kmod);
+                check_neighbor(VD, S, N, local_value, local_x, local_y, tidx, tidy + kmod, DIST);
             }
         }
         //__syncthreads();
@@ -210,12 +414,21 @@ __global__ void voronoiJFA_4Ng(int *VD, int *S, int *MAX,int k, int N, int s){
     //}    
 }
 
-__global__ void moveSeeds(int *SEEDS, int *DELTA, int N, int S, int mod, curandState *states){
+__global__ void init_rand(int S, int mod, curandState *states){
     int tid = blockDim.x * blockIdx.x + threadIdx.x;
     int seed = tid;
-    int old_x, old_y, new_x, new_y, delta_x, delta_y;
+    if(tid < S) curand_init(seed + mod, tid, 0, &states[tid]);
+}
+
+__global__ void moveSeeds(int *SEEDS, int *GPU_VD, int *DELTA, int N, int S, int mod, curandState *states){
+    int tid = blockDim.x * blockIdx.x + threadIdx.x;
+    int seed = tid;
+    int old_x, old_y, new_x, new_y, delta_x, delta_y, ref_seed;
+    int old_vd;
+    unsigned long long int old_ref=0,old=0,result; 
     if(tid < S){
-        curand_init(seed + mod, tid, 0, &states[tid]);
+        DELTA[tid] = 0;
+        //curand_init(seed + mod, tid, 0, &states[tid]);
 
         old_x = SEEDS[tid]%N;
         old_y = SEEDS[tid]/N;
@@ -225,12 +438,22 @@ __global__ void moveSeeds(int *SEEDS, int *DELTA, int N, int S, int mod, curandS
 
         new_x = old_x + delta_x;
         new_y = old_y + delta_y;
-        
+
         if(new_x<0 || new_x>=N) new_x = old_x;
         if(new_y<0 || new_y>=N) new_y = old_y;
-        DELTA[tid] = int(sqrtf(pow(new_x - old_x,2) + pow(new_y - old_y,2)));
-        SEEDS[tid] = new_y*N + new_x;
+
+        //
+
+        old = GPU_VD[new_y*N + new_x];
+        old_ref = old;
+        //result = atomicCAS(&old,old_ref,tid);
+        // if result == old_ref then change
+        //if(){
+            DELTA[tid] = int(sqrtf(pow(new_x - old_x,2) + pow(new_y - old_y,2)));
+            SEEDS[tid] = new_y*N + new_x;
+        //} 
     }
+    
 }
 
 __global__ void lastcheck(int *VD, int *S, int s){
@@ -243,4 +466,3 @@ __global__ void lastcheck(int *VD, int *S, int s){
 float euclideanDistanceCPU(int x1, int x2, int y1, int y2){
     return sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
 }
-
