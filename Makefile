@@ -28,6 +28,8 @@ test:
 	./prog ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8}
 	./prog ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8}
 	./prog ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8}
+test_redux:
+	nvcc -Xcompiler -fopenmp -O3 -DSSTEP test.cu -o test -lm
 target:
 	number=100 ; while [[ $$number -le 10000 ]] ; do \
 	       make test 1=${1} 2=$$number 3=2 4=100 5=0 6=1 7=32 8=${2}; \

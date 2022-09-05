@@ -13,7 +13,7 @@ int main(int argc, char **argv){
         printf("DEVICE - Wich device to use, fill with ID of GPU\n");
         printf("MEM_GPU - Memory management, 1: manual, 0: auto, anything if DEVICE = 0\n");
         printf("BS - block size of GPU (32 max), anything if DEVICE = 0\n");
-	printf("DIST - distance method, 1: manhattan, 0: euclidean\n");
+	    printf("DIST - distance method, 1: manhattan, 0: euclidean\n");
         return(EXIT_FAILURE);
     }
     //Initialize argv
@@ -40,12 +40,7 @@ int main(int argc, char **argv){
     int seed = 0;
     int k, k_mod, k_copy, k_mod_or, k_ref;
     k = pow(2,int(log2(N)));//
-    if(N>=S){
-        k_mod = pow(2, ceil(log2(6)) + int(log2(N)) - int(round(log2(S))) + int(log10(N)));//
-    }
-    else k_mod = pow(2, ceil(log2(6)) + int(log2(N)) - int(round(log2(S))) + int(log10(N)) + int(round(log10(S/N))));
     
-    if(k_mod >= k/4) k_mod = k/4;
     int dmax = 6;
     int fac = int(log2(2*N/sqrt(S)));
 
@@ -87,17 +82,17 @@ int main(int argc, char **argv){
     cudaDeviceSynchronize();
     
     //printf("%i\n",k_copy);
-    
+    k_copy = k;
     while(k_copy >0){
         //printf("local_k: %i\n", k_copy);
         /*
         voronoiJFA_8Ng<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S);
         /**/
-        voronoiJFA_8NgV21<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S, 0);
+        voronoiJFA_8NgV21<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S, 0, 1);
         cudaDeviceSynchronize();
-        voronoiJFA_8NgV22<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S, 0);
+        voronoiJFA_8NgV22<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S, 0, 1);
         cudaDeviceSynchronize();
-        voronoiJFA_8NgV23<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S, 0);
+        voronoiJFA_8NgV23<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, k_copy, N, S, 0, 1);
         /**/
         cudaDeviceSynchronize();
         k_copy= k_copy/2;
@@ -165,7 +160,7 @@ int main(int argc, char **argv){
             initVD<<<grid_jfa, block_jfa>>>(GPU_VD_REF, N);
             time_ref = omp_get_wtime();
             while(k_ref>=1){
-                voronoiJFA_8Ng<<< grid_jfa, block_jfa>>>(GPU_VD_REF, GPU_SEEDS,k_ref, N, S, 0);
+                voronoiJFA_8Ng<<< grid_jfa, block_jfa>>>(GPU_VD_REF, GPU_SEEDS,k_ref, N, S, 0, 1);
                 cudaDeviceSynchronize();
                 k_ref = k_ref/2;
             }
@@ -176,7 +171,7 @@ int main(int argc, char **argv){
         if(MODE == 1 || MODE == 2){
             time_mjfa = omp_get_wtime();
             while(k_mod>=k_mod_or/2){
-                voronoiJFA_4Ng<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, GPU_DELTAMAX, k_mod, N, S, DIST);
+                voronoiJFA_4Ng<<< grid_jfa, block_jfa>>>(GPU_VD, GPU_SEEDS, GPU_DELTAMAX, k_mod, N, S, DIST, 1);
                 cudaDeviceSynchronize();
                 k_mod = k_mod/2;
             }
