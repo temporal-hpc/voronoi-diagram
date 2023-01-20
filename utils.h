@@ -1,3 +1,4 @@
+#include <string>
 using namespace std;
 
 __device__ void reduce(volatile int *data, int tid){
@@ -152,6 +153,34 @@ void write_acc(double acc, double best, double worst, double acc_fr, double best
 	}
 }
 
+void write_data(int N, int S, string method, int mu, double time_1, double time_2, double avg_acc, double best_acc, double worst_acc){
+    string name = "metrics-nb/";
+    name.insert(name.size(), method);
+    name.insert(name.size(), "/");
+    name.insert(name.size(), to_string(N));
+    name.insert(name.size(), "x");
+    name.insert(name.size(), to_string(N));
+    name.insert(name.size(), "/");
+    name.insert(name.size(), to_string(S));
+    name.insert(name.size(), "_");
+    name.insert(name.size(), to_string(mu));
+    fstream FILE(name, fstream::app);
+	if(FILE.is_open()){
+        string data = to_string(time_1);
+        data.insert(data.size(), " ");
+        data.insert(data.size(), to_string(time_2));
+        data.insert(data.size(), " ");
+        data.insert(data.size(), to_string(avg_acc));
+        data.insert(data.size(), " ");
+        data.insert(data.size(), to_string(best_acc));
+        data.insert(data.size(), " ");
+        data.insert(data.size(), to_string(worst_acc));
+        data.insert(data.size(), "\n");
+        FILE<<data;
+        FILE.close();
+    }
+}
+
 void initSeeds(int *SEEDS, int N, int S){
     int i;
     vector<int> POSSIBLE_SEEDS;
@@ -286,4 +315,60 @@ int is_border(int local_x, int local_y, int *VD, int N){
 	}
 
 	return 0;
+}
+
+void read_coords(int *seeds, int N, int S, int count, int molecules){
+	string name = "sample-lj/2d-sample-";
+	name.insert(name.size(), to_string(molecules));
+	name.insert(name.size(), "k/coords-voro/");
+	name.insert(name.size(), to_string(count));
+	name.insert(name.size(),".txt");
+    
+	ifstream FILE(name);
+	int i = 0;
+    int count_seed = 0;
+	char *ptr;
+    int n;
+    int x,y;
+    //Box assumption
+    int max_x = -1;
+	int max_y = -1;
+    
+    string text;
+	while (getline(FILE, text)) {
+        y = -1;
+        n = text.length();
+        char aux[n+1];
+        strcpy(aux, text.c_str());
+		ptr = strtok(aux," ");
+        x = atoi(ptr);
+        while(ptr!= NULL){
+            ptr = strtok(NULL," ");
+            if(y==-1) y = atoi(ptr);
+            
+        }
+        if( max_x < x) max_x = x;
+		if( max_y < y) max_y = y;
+        
+        seeds[count_seed++] = y*N + x;
+		
+	}
+	
+    int delim = max(max_x + 2, max_y + 2);
+    for(int i = 0; i < S; ++i){
+        int seed = seeds[i];
+        int aux_x = seed%N;
+        int aux_y = seed/N;
+		//printf("%i %i %i\n", seed, aux_x, aux_y);
+        aux_x = aux_x*N/delim;
+        aux_y = aux_y*N/delim;
+        seeds[i] = aux_y * N + aux_x;
+		//printf("%i %i %i\n", seeds[i], aux_x, aux_y);
+        if(seeds[i] >= N*N){
+            printf("SOMETHING WRONG %i %i\n", aux_x, aux_y);
+            exit(0);
+        }
+    }
+	FILE.close();
+
 }
