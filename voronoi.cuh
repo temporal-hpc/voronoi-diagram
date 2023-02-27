@@ -941,6 +941,10 @@ void dynamicSeeds(Setup setup, int iter){
     if(setup.sample == 0){
         moveSeeds<<<setup.seeds_grid, setup.seeds_block>>>(setup.gpu_seeds, setup.gpu_delta,setup.N, setup.S, 1, setup.r_device);
         cudaDeviceSynchronize();
+        if(cudaGetLastError() != cudaSuccess){
+                printf("Something went wrong on N-body\n");
+                exit(0);
+        }
     }
     else if (setup.sample == 1){
         read_coords(setup.seeds, setup.N, setup.S, 100-iter+1, setup.molecules);
@@ -1057,11 +1061,11 @@ void mjfaVDIters(Setup setup, int *v_diagram, int *seeds, int N, int S, int k, i
 }
 
 void baseJFA(Setup setup){
-    clearGrid<<<setup.normal_grid, setup.normal_block>>>(setup.gpu_v_diagram, setup.gpu_seeds, setup.N, setup.S);
+    clearGrid<<<setup.normal_grid, setup.normal_block>>>(setup.gpu_backup_vd, setup.gpu_seeds, setup.N, setup.S);
     cudaDeviceSynchronize();
-    init_GPUSeeds<<<setup.seeds_grid, setup.seeds_block>>>(setup.gpu_v_diagram, setup.gpu_seeds, setup.S);
+    init_GPUSeeds<<<setup.seeds_grid, setup.seeds_block>>>(setup.gpu_backup_vd, setup.gpu_seeds, setup.S);
     cudaDeviceSynchronize();
-    jfaVDUnique(setup, setup.gpu_v_diagram, setup.gpu_seeds, setup.N, setup.S, setup.k, 1, setup.normal_grid, setup.normal_block, setup.pbc);
+    jfaVDUnique(setup, setup.gpu_backup_vd, setup.gpu_seeds, setup.N, setup.S, setup.k, 1, setup.normal_grid, setup.normal_block, setup.pbc);
     cudaDeviceSynchronize();
 }
 
@@ -1194,10 +1198,10 @@ void itersJFA(Setup setup){
         //baseJFA(setup);
 
         // Dynamic JFA (dJFA)
-        //dJFA(setup, iter_copy);
+        dJFA(setup, iter_copy);
 
         //Redux JFA (rJFA)
-        rJFA(setup);
+        //rJFA(setup);
 
         // Dynamic  - Redux JFA (dr-JFA)
         //drJFA(setup, iter_copy);

@@ -16,7 +16,7 @@ int main(int argc, char **argv){
         printf("REDUX - if redux method is used, 0: no, 1: yes\n");
         printf("Select MU - election of MU, 1: arbitrary, 0:estimated\n");
         printf("MU - value of MU if arbitrary\n");
-        printf("SAMPLE - 0: rand uniform, 1: lennard jones sample");
+        printf("SAMPLE - 0: rand uniform, 1: lennard jones sample, 2: nbody");
         printf("MOLECULES - for lennard jones sample {25,50,75,100,125,150,175,200}k");
         printf("DEBUG SIM - if compare against naive, 1: yes, 0: no");
         return(EXIT_FAILURE);
@@ -39,9 +39,10 @@ int main(int argc, char **argv){
     );
     allocate_arrays(&setup);
     printRunInfo(&setup);
+    seetSeeds(&setup);
     setDeviceInfo(&setup);
     setRandDevice(&setup);
-    seetSeeds(&setup);
+    
     itersJFA(setup);
     getDeviceArrays(&setup);
     freeSpace(&setup);

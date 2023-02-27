@@ -29,7 +29,7 @@ test_lj_sample:
 test_uni_sample:
 	./test 4000 ${1} 0 100 1 1 32 0 1 1 1 0 0 1
 test_djfa_uni:
-	./test ${1} ${2} 0 100 1 1 32 1 1 1 1 0 0 1
+	./test ${1} ${2} 0 100 1 1 32 0 1 1 1 0 0 1
 test_rjfa_uni:
 	./test ${1} ${2} 0 100 1 1 32 0 1 1 ${3} 0 0 1
 test_djfa_lj:
@@ -37,7 +37,7 @@ test_djfa_lj:
 test_rjfa_lj:
 	./test ${1} ${2} 0 100 1 1 32 0 1 1 ${3} 1 ${4} 1
 test_djfa_nb:
-	./test ${1} ${2} 0 100 1 1 32 1 1 1 1 2 ${3} 1
+	./test ${1} ${2} 0 100 1 1 32 0 1 1 1 2 ${3} 1
 test_rjfa_nb:
 	./test ${1} ${2} 0 100 1 1 32 0 1 1 ${3} 2 ${4} 1
 target:
