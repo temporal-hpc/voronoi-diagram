@@ -104,7 +104,7 @@ void write_sp(float sp, int AREA, int N){
 }
 
 #ifdef SSTEP
-void save_step(int *map, int n, int step, int dec){
+void save_step(float4 *map, int n, int step, int dec){
     string name;
     if(dec == 1) name ="example/map";
     else if(dec == 0) name="example2/map";
@@ -195,6 +195,23 @@ void initSeeds(int *SEEDS, int N, int S){
         #ifdef DEBUG
             if(S <= 500 )printf("%i\n", SEEDS[i]);
         #endif
+    }
+}
+
+void initSeeds3D(int *SEEDS, int N, int S){
+    int i;
+    vector<int> POSSIBLE_SEEDS;
+    srand(time(0));
+
+    for(i = 0; i < N*N*N; ++i) POSSIBLE_SEEDS.push_back(i);
+
+    random_shuffle(POSSIBLE_SEEDS.begin(), POSSIBLE_SEEDS.end());
+    
+    for(i = 0; i < S; ++i){
+        SEEDS[i] = POSSIBLE_SEEDS[i];
+        //#ifdef DEBUG
+            //if(S<=500 && i <= 10 )printf("%i\n", SEEDS[i]);
+        //#endif
     }
 }
 

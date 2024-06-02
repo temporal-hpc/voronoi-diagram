@@ -1,11 +1,11 @@
-#include "voronoi.cuh"
+#include "jfa3Dmethods.cuh"
 
 using namespace std;
 
 int main(int argc, char **argv){
     if(argc!=15){
         printf("Run as ./prog N S MODE ITER DEVICE MEM_GPU BS DIST REDUX Select-MU MU SAMPLE MOLECULES\n");
-        printf("N - length/width of grid\n");
+        printf("N - length/width/height of cube\n");
         printf("S - number of seeds\n");
         printf("MODE - (0) JFA, (1) dJFA, (2) rJFA, (3) drJFA\n");
         printf("ITER - number of iterations\n");
@@ -22,7 +22,7 @@ int main(int argc, char **argv){
         return(EXIT_FAILURE);
     }
     Setup setup;
-    initialize_variables(&setup,
+    initializeVariables3D(&setup,
                         atoi(argv[1]),
                         atoi(argv[2]),
                         atoi(argv[3]),
@@ -37,13 +37,13 @@ int main(int argc, char **argv){
                         atoi(argv[13]),
                         atoi(argv[14])
     );
-    allocate_arrays(&setup);
+    allocate_arrays3D(&setup);
     printRunInfo(&setup);
-    seetSeeds(&setup);
-    setDeviceInfo(&setup);
+    setSeeds3D(&setup);
+    setDeviceInfo3D(&setup);
     setRandDevice(&setup);
     
-    itersJFA(setup);
-    getDeviceArrays(&setup);
+    itersJFA3D(setup);
+    getDeviceArrays3D(&setup);
     freeSpace(&setup);
 }
