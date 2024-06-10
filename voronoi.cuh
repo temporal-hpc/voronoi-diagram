@@ -1079,8 +1079,11 @@ void dynamicSeeds(Setup setup, int iter){
     if(setup.sample == 0){
         moveSeeds<<<setup.seeds_grid, setup.seeds_block>>>(setup.gpu_seeds, setup.gpu_delta,setup.N, setup.S, 1, setup.r_device);
         cudaDeviceSynchronize();
-        if(cudaGetLastError() != cudaSuccess){
+        cudaError_t code = cudaGetLastError();
+        //if(cudaGetLastError() != cudaSuccess){
+        if(code != cudaSuccess){
                 printf("Something went wrong on Uniform\n");
+                printf("Error: %s\n", cudaGetErrorString(code));
                 exit(0);
         }
     }
@@ -1386,7 +1389,9 @@ void itersJFA(Setup setup){
             bruteReference<<<setup.normal_grid, setup.normal_block>>>(setup.gpu_v_diagram, setup.gpu_seeds, setup.N, setup.S, setup.distance_function, setup.pbc);
             cudaDeviceSynchronize();
         }
-        if(cudaGetLastError() != cudaSuccess){
+        cudaError_t code = cudaGetLastError();
+        if(code != cudaSuccess){
+            printf("Error: %s\n", cudaGetErrorString(code));
             printf("Something went wrong on Comparison\n");
             exit(0);
         }

@@ -1,8 +1,9 @@
 SHELL := /bin/bash # Use bash syntax
-DEBUG= DEBUG
-SAVE= SSTEP
-PARAMS= -fopenmp
-COMP= -Xcompiler
+DEBUG=DEBUG
+SAVE=SSTEP
+PARAMS=-fopenmp ${ARCH}
+ARCH=-arch sm_80
+COMP= -Xcompiler 
 ITER=SAVE_ITER
 S1= JFA1	
 S2= JFA2

@@ -39,7 +39,7 @@ int main(int argc, char **argv){
     );
     allocate_arrays(&setup);
     printRunInfo(&setup);
-    seetSeeds(&setup);
+    setSeeds(&setup);
     setDeviceInfo(&setup);
     setRandDevice(&setup);
     
