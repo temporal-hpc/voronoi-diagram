@@ -1,8 +1,9 @@
 # voronoi-diagram
 ## Important
-Tested on Arch Linux 6.8.9 (as for 02/06/24)
-GCC: 14.1.1
-CUDA: 12.4
+Tested on:
+- Arch Linux 6.8.9 (as for 02/06/24)
+- GCC: 14.1.1
+- CUDA: 12.4
 ## Instructions
 ### 2D Voronoi (default)
 Compilation:
