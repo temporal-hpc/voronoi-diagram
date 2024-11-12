@@ -3,17 +3,13 @@
 Tested on Arch Linux 6.8.9 (as for 02/06/24)
 GCC: 14.1.1
 CUDA: 12.4
-Currently only supported on Linux and tested with the tools & versions mentioned before
 ## Instructions
 ### 2D Voronoi (default)
-To  download and compile the default version just type the following
+Compilation:
 ```
-git clone git@github.com:temporal-hpc/voronoi-diagram.git
-cd voronoi-diagram
 make
 ```
-
-How to execute
+Execution:
 ```
 Run as ./test N S MODE ITER DEVICE MEM_GPU BS DIST REDUX Select-MU MU SAMPLE MOLECULES
 N - length/width of grid
@@ -32,7 +28,7 @@ MOLECULES - for lennard jones sample {25,50,75,100,125,150,175,200}
 DEBUG SIM - if compare against naive, 1: yes, 0: no
 ```
 
-Example execution
+Example:
 ```
 ./test $((2**14)) $((2**10))    0 10   0    0 32 0    0 1 4    0 50 0
 N: 16384, N_p(if used): 4096
