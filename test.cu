@@ -4,7 +4,7 @@ using namespace std;
 
 int main(int argc, char **argv){
     if(argc!=15){
-        printf("Run as ./prog N S MODE ITER DEVICE MEM_GPU BS DIST REDUX Select-MU MU SAMPLE MOLECULES\n");
+        printf("Run as ./test N S MODE ITER DEVICE MEM_GPU BS DIST REDUX Select-MU MU SAMPLE MOLECULES\n");
         printf("N - length/width of grid\n");
         printf("S - number of seeds\n");
         printf("MODE - (0) JFA, (1) dJFA, (2) rJFA, (3) drJFA\n");
@@ -16,9 +16,9 @@ int main(int argc, char **argv){
         printf("REDUX - if redux method is used, 0: no, 1: yes\n");
         printf("Select MU - election of MU, 1: arbitrary, 0:estimated\n");
         printf("MU - value of MU if arbitrary\n");
-        printf("SAMPLE - 0: rand uniform, 1: lennard jones sample, 2: nbody");
-        printf("MOLECULES - for lennard jones sample {25,50,75,100,125,150,175,200}k");
-        printf("DEBUG SIM - if compare against naive, 1: yes, 0: no");
+        printf("SAMPLE - 0: rand uniform, 1: lennard jones sample, 2: nbody\n");
+        printf("MOLECULES - for lennard jones sample {25,50,75,100,125,150,175,200}\n");
+        printf("DEBUG SIM - if compare against naive, 1: yes, 0: no\n");
         return(EXIT_FAILURE);
     }
     Setup setup;
