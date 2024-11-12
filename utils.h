@@ -21,7 +21,7 @@ __global__ void simple_max(int *data, int *max, int n, int s){
     }
     __syncthreads();
 
-    for(unsigned int s = blockDim.x/2; s>32; s>>1){
+    for(unsigned int s = blockDim.x/2; s>32; s>>=1){
         if(tid < s){
             if(sd_data[tid] < sd_data[tid + s]) sd_data[tid] = sd_data[tid + s];
         }
@@ -342,7 +342,7 @@ void read_coords(int *seeds, int N, int S, int count, int molecules){
 	name.insert(name.size(),".txt");
     
 	ifstream FILE(name);
-	int i = 0;
+	//int i = 0;
     int count_seed = 0;
 	char *ptr;
     int n;
