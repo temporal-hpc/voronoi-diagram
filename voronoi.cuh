@@ -1434,7 +1434,9 @@ void itersJFA(Setup setup){
     ms2_t = ms2_t * 0.001;
     best_worst_acc[2] = best_worst_acc[2] / double(count_acc);
     printf("TOTAL TIME REFERENCE: %f, TOTAL TIME PROPOSAL: %f\n", ms1_t, ms2_t);
-    printf("ACCURACY - AVG: %f - BEST: %f - WORST: %f\n", best_worst_acc[2], best_worst_acc[0], best_worst_acc[1]);
+    if(setup.comparison){
+        printf("ACCURACY - AVG: %f - BEST: %f - WORST: %f\n", best_worst_acc[2], best_worst_acc[0], best_worst_acc[1]);
+    }
     /*
     if(setup->mode == 0) write_data(setup.N, setup.S, "JFA", setup.mu, ms1_t, ms2_t, best_worst_acc[2], best_worst_acc[0], best_worst_acc[1]);
     else if(setup->mode == 1) write_data(setup.N, setup.S, "dJFA", setup.mu, ms1_t, ms2_t, best_worst_acc[2], best_worst_acc[0], best_worst_acc[1]);
