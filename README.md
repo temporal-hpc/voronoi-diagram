@@ -34,7 +34,7 @@ DEBUG SIM - if compare against naive, 1: yes, 0: no
 
 Example execution
 ```
-➜  voronoi-diagram git:(main) ✗ ./test $((2**14)) $((2**10))    0 10   0    0 32 0    0 1 4    0 50 0
+./test $((2**14)) $((2**10))    0 10   0    0 32 0    0 1 4    0 50 0
 N: 16384, N_p(if used): 4096
 MU: 4
 Sample: 0
